@@ -17,11 +17,12 @@ class GoogleAIEmbeddingFunction(EmbeddingFunction):
         model = self.config.model
         title = self.config.title
         task_type = self.config.task_type
+        vector_dimension = self.config.vector_dimension
         if isinstance(input, str):
             input_ = [input]
         else:
             input_ = input
-        data = genai.embed_content(model=model, content=input_, task_type=task_type, title=title)
+        data = genai.embed_content(model=model, content=input_, task_type=task_type, title=title, output_dimensionality=vector_dimension)
         embeddings = data["embedding"]
         if isinstance(input_, str):
             embeddings = [embeddings]
