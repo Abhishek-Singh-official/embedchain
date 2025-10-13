@@ -109,7 +109,13 @@ class PineconeDB(BaseVectorDB):
                 vectors = result.vectors
                 batch_existing_ids = list(vectors.keys())
                 existing_ids.extend(batch_existing_ids)
-                metadatas.extend([vectors.get(ids).get("metadata") for ids in batch_existing_ids])
+                # metadatas.extend([vectors.get(ids).get("metadata") for ids in batch_existing_ids])
+                for ids in batch_existing_ids:
+                    vector_obj = vectors.get(ids)
+                    if vector_obj and hasattr(vector_obj, "metadata"):
+                        metadatas.append(vector_obj.metadata)
+                    else:
+                        metadatas.append(None)
         return {"ids": existing_ids, "metadatas": metadatas}
 
     def add(
@@ -144,8 +150,8 @@ class PineconeDB(BaseVectorDB):
                 },
             )
 
-        # for chunk in chunks(docs, self.batch_size, desc="Adding chunks in batches"):
-        #     self.pinecone_index.upsert(chunk, **kwargs)
+        for chunk in chunks(docs, self.batch_size, desc="Adding chunks in batches"):
+            self.pinecone_index.upsert(chunk, **kwargs)
 
     def query(
         self,
