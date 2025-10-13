@@ -555,9 +555,9 @@ class EmbedChain(JSONSerializable):
         if self.llm.config.token_usage:
             return {"answer": answer, "usage": token_info}
 
-        logger.warning(
-            "Starting from v0.1.125 the return type of query method will be changed to tuple containing `answer`."
-        )
+        # logger.warning(
+        #     "Starting from v0.1.125 the return type of query method will be changed to tuple containing `answer`."
+        # )
         return answer
 
     def chat(

@@ -144,8 +144,8 @@ class PineconeDB(BaseVectorDB):
                 },
             )
 
-        for chunk in chunks(docs, self.batch_size, desc="Adding chunks in batches"):
-            self.pinecone_index.upsert(chunk, **kwargs)
+        # for chunk in chunks(docs, self.batch_size, desc="Adding chunks in batches"):
+        #     self.pinecone_index.upsert(chunk, **kwargs)
 
     def query(
         self,

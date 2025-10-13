@@ -249,7 +249,7 @@ class BaseLlm(JSONSerializable):
                 k["web_search_result"] = self.access_search_and_get_results(input_query)
             k["memories"] = memories
             prompt = self.generate_prompt(input_query, contexts, **k)
-            logger.info(f"Prompt: {prompt}")
+            # logger.info(f"Prompt: {prompt}")
             if dry_run:
                 return prompt
 
@@ -258,7 +258,7 @@ class BaseLlm(JSONSerializable):
             else:
                 answer = self.get_answer_from_llm(prompt)
             if isinstance(answer, str):
-                logger.info(f"Answer: {answer}")
+                # logger.info(f"Answer: {answer}")
                 if self.config.token_usage:
                     return answer, token_info
                 return answer
