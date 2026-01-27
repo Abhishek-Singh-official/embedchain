@@ -791,3 +791,10 @@ class EmbedChain(JSONSerializable):
         # Send anonymous telemetry
         if self.config.collect_metrics:
             self.telemetry.capture(event_name="delete", properties=self._telemetry_props)
+
+    def delete_namespace(self, namespace_id: str):
+        """
+        Deletes namespace from the database.
+        """
+        self.db.delete_namespace(namespace_id=namespace_id)
+        logger.info(f"Successfully deleted namespace {namespace_id}")

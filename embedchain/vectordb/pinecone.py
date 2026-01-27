@@ -261,3 +261,13 @@ class PineconeDB(BaseVectorDB):
         except Exception as e:
             print(f"Failed to delete from Pinecone: {e}")
             return
+
+    def delete_namespace(self, namespace_id: Optional[str] = None,):
+        """
+        Delete namespace from database.
+        """
+        try:
+            self.pinecone_index.delete_namespace(namespace=namespace_id)
+        except Exception as e:
+            print(f"Failed to delete namespace from Pinecone: {e}")
+            return

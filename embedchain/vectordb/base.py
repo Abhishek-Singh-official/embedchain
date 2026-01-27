@@ -80,3 +80,8 @@ class BaseVectorDB(JSONSerializable):
         """Delete from database."""
 
         raise NotImplementedError
+
+    def delete_namespace(self):
+        """Delete from database."""
+
+        raise NotImplementedError
