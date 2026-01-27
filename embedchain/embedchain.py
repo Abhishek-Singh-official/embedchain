@@ -262,6 +262,7 @@ class EmbedChain(JSONSerializable):
             existing_embeddings = self.db.get(
                 where=where,
                 limit=1,
+                app_id=self.config.id,
             )
             if len(existing_embeddings.get("metadatas", [])) > 0:
                 return existing_embeddings["metadatas"][0]["doc_id"]
@@ -279,6 +280,7 @@ class EmbedChain(JSONSerializable):
                 existing_embeddings = self.db.get(
                     where=where,
                     limit=1,
+                    app_id=self.config.id,
                 )
                 if len(existing_embeddings.get("metadatas", [])) > 0:
                     return existing_embeddings["metadatas"][0]["doc_id"]
@@ -343,7 +345,7 @@ class EmbedChain(JSONSerializable):
         # this means that doc content has changed.
         if existing_doc_id and existing_doc_id != new_doc_id:
             logger.info("Doc content has changed. Recomputing chunks and embeddings intelligently.")
-            self.db.delete({"doc_id": existing_doc_id})
+            self.db.delete({"doc_id": existing_doc_id}, app_id=self.config.id,)
 
         # get existing ids, and discard doc if any common id exist.
         where = {"url": src}
@@ -358,7 +360,7 @@ class EmbedChain(JSONSerializable):
         if self.config.id is not None:
             where["app_id"] = self.config.id
 
-        db_result = self.db.get(ids=ids, where=where)  # optional filter
+        db_result = self.db.get(ids=ids, where=where, app_id=self.config.id,)  # optional filter
         existing_ids = set(db_result["ids"])
         if len(existing_ids):
             data_dict = {id: (doc, meta) for id, doc, meta in zip(ids, documents, metadatas)}
@@ -381,6 +383,7 @@ class EmbedChain(JSONSerializable):
             # Add app id in metadatas so that they can be queried on later
             if self.config.id:
                 m["app_id"] = self.config.id
+                m["bot_id"] = self.config.id
 
             # Add hashed source
             m["hash"] = source_hash
@@ -413,7 +416,7 @@ class EmbedChain(JSONSerializable):
             try:
                 # Add only valid batches
                 if batch_docs:
-                    self.db.add(documents=batch_docs, metadatas=batch_meta, ids=batch_ids, **kwargs)
+                    self.db.add(documents=batch_docs, metadatas=batch_meta, ids=batch_ids, app_id=self.config.id, **kwargs)
             except Exception as e:
                 logger.info(f"Failed to add batch due to a bad request: {e}")
                 # Handle the error, e.g., by logging, retrying, or skipping
@@ -474,6 +477,7 @@ class EmbedChain(JSONSerializable):
             n_results=query_config.number_documents,
             where=where,
             citations=citations,
+            app_id=self.config.id,
             **kwargs,
         )
 
@@ -782,7 +786,7 @@ class EmbedChain(JSONSerializable):
             logger.error(f"Error deleting data sources: {e}")
             self.db_session.rollback()
             return None
-        self.db.delete(where={"hash": source_id})
+        self.db.delete(where={"hash": source_id}, app_id=self.config.id,)
         logger.info(f"Successfully deleted {source_id}")
         # Send anonymous telemetry
         if self.config.collect_metrics:

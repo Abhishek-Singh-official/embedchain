@@ -89,7 +89,7 @@ class PineconeDB(BaseVectorDB):
             )
         self.pinecone_index = self.client.Index(self.config.index_name)
 
-    def get(self, ids: Optional[list[str]] = None, where: Optional[dict[str, any]] = None, limit: Optional[int] = None):
+    def get(self, ids: Optional[list[str]] = None, where: Optional[dict[str, any]] = None, limit: Optional[int] = None, app_id: Optional[str] = None,):
         """
         Get existing doc ids present in vector database
 
@@ -105,7 +105,7 @@ class PineconeDB(BaseVectorDB):
 
         if ids is not None:
             for i in range(0, len(ids), self.batch_size):
-                result = self.pinecone_index.fetch(ids=ids[i : i + self.batch_size])
+                result = self.pinecone_index.fetch(ids=ids[i : i + self.batch_size], namespace=app_id,)
                 vectors = result.vectors
                 batch_existing_ids = list(vectors.keys())
                 existing_ids.extend(batch_existing_ids)
@@ -123,6 +123,7 @@ class PineconeDB(BaseVectorDB):
         documents: list[str],
         metadatas: list[object],
         ids: list[str],
+        app_id: Optional[str] = None,
         **kwargs: Optional[dict[str, any]],
     ):
         """add data in vector database
@@ -151,7 +152,7 @@ class PineconeDB(BaseVectorDB):
             )
 
         for chunk in chunks(docs, self.batch_size, desc="Adding chunks in batches"):
-            self.pinecone_index.upsert(chunk, **kwargs)
+            self.pinecone_index.upsert(chunk, namespace=app_id, **kwargs)
 
     def query(
         self,
@@ -186,6 +187,7 @@ class PineconeDB(BaseVectorDB):
             query_vector = query_vector.tolist()
         params = {
             "vector": query_vector,
+            "namespace": app_id,
             "filter": query_filter,
             "top_k": n_results,
             "include_metadata": True,
@@ -246,7 +248,7 @@ class PineconeDB(BaseVectorDB):
             query[k] = {"$eq": v}
         return query
 
-    def delete(self, where: dict):
+    def delete(self, where: dict, app_id: Optional[str] = None,):
         """Delete from database.
         :param ids: list of ids to delete
         :type ids: list[str]
@@ -255,7 +257,7 @@ class PineconeDB(BaseVectorDB):
         # Follow `https://docs.pinecone.io/docs/metadata-filtering#deleting-vectors-by-metadata-filter` for more details
         db_filter = self._generate_filter(where)
         try:
-            self.pinecone_index.delete(filter=db_filter)
+            self.pinecone_index.delete(filter=db_filter, namespace=app_id,)
         except Exception as e:
             print(f"Failed to delete from Pinecone: {e}")
             return
