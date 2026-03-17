@@ -43,16 +43,24 @@ class GoogleLlm(BaseLlm):
             top_p=self.config.top_p if (0.0 < self.config.top_p <= 1.0) else None
         )
 
-        if self.config.stream:
-            return self.client.models.generate_content_stream(
+        response = self.client.models.generate_content(
             model=model_name,
             contents=prompt,
             config=generation_config,
         )
-        else:
-            response = self.client.models.generate_content(
-                model=model_name,
-                contents=prompt,
-                config=generation_config,
-            )
-            return response.text
+        
+        return response.text
+
+        # if self.config.stream:
+        #     return self.client.models.generate_content_stream(
+        #     model=model_name,
+        #     contents=prompt,
+        #     config=generation_config,
+        # )
+        # else:
+        #     response = self.client.models.generate_content(
+        #         model=model_name,
+        #         contents=prompt,
+        #         config=generation_config,
+        #     )
+        #     return response.text
