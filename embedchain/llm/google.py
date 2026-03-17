@@ -36,28 +36,23 @@ class GoogleLlm(BaseLlm):
         model_name = self.config.model or "gemini-pro"
         # logger.info(f"Using Google LLM model: {model_name}")
 
-        generation_config_params = {
-            "candidate_count": 1,
-            "max_output_tokens": self.config.max_tokens,
-            "temperature": self.config.temperature or 0.5,
-        }
+        generation_config = types.GenerateContentConfig(
+            candidate_count = 1,
+            max_output_tokens = self.config.max_tokens,
+            temperature = self.config.temperature or 0.5,
+            top_p=self.config.top_p if (0.0 < self.config.top_p <= 1.0) else None
+        )
 
-        if 0.0 <= self.config.top_p <= 1.0:
-            generation_config_params["top_p"] = self.config.top_p
-        else:
-            raise ValueError("`top_p` must be > 0.0 and < 1.0")
-
-        generation_config = types.GenerateContentConfig(**generation_config_params)
-
-        response = self.client.models.generate_content(
+        if self.config.stream:
+            return self.client.models.generate_content_stream(
             model=model_name,
             contents=prompt,
             config=generation_config,
-            stream=self.config.stream,
         )
-        if self.config.stream:
-            # TODO: Implement streaming
-            response.resolve()
-            return response.text
         else:
+            response = self.client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+                config=generation_config,
+            )
             return response.text
