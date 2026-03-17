@@ -4,10 +4,11 @@ from collections.abc import Generator
 from typing import Any, Optional, Union
 
 try:
-    import google.generativeai as genai
+    from google import genai
 except ImportError:
     raise ImportError("GoogleLlm requires extra dependencies. Install with `pip install google-generativeai`") from None
 
+from google.genai import types
 from embedchain.config import BaseLlmConfig
 from embedchain.helpers.json_serializable import register_deserializable
 from embedchain.llm.base import BaseLlm
@@ -23,7 +24,7 @@ class GoogleLlm(BaseLlm):
             raise ValueError("Please set the GOOGLE_API_KEY environment variable or pass it in the config.")
 
         api_key = self.config.api_key or os.getenv("GOOGLE_API_KEY")
-        genai.configure(api_key=api_key)
+        self.client = genai.Client(api_key=api_key)
 
     def get_llm_model_answer(self, prompt):
         if self.config.system_prompt:
@@ -34,7 +35,6 @@ class GoogleLlm(BaseLlm):
     def _get_answer(self, prompt: str) -> Union[str, Generator[Any, Any, None]]:
         model_name = self.config.model or "gemini-pro"
         # logger.info(f"Using Google LLM model: {model_name}")
-        model = genai.GenerativeModel(model_name=model_name)
 
         generation_config_params = {
             "candidate_count": 1,
@@ -47,11 +47,12 @@ class GoogleLlm(BaseLlm):
         else:
             raise ValueError("`top_p` must be > 0.0 and < 1.0")
 
-        generation_config = genai.types.GenerationConfig(**generation_config_params)
+        generation_config = types.GenerateContentConfig(**generation_config_params)
 
-        response = model.generate_content(
-            prompt,
-            generation_config=generation_config,
+        response = self.client.models.generate_content(
+            model=model_name,
+            contents=prompt,
+            config=generation_config,
             stream=self.config.stream,
         )
         if self.config.stream:
