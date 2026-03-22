@@ -383,7 +383,7 @@ class EmbedChain(JSONSerializable):
             # Add app id in metadatas so that they can be queried on later
             if self.config.id:
                 m["app_id"] = self.config.id
-                m["bot_id"] = self.config.id
+                # m["bot_id"] = self.config.id
 
             # Add hashed source
             m["hash"] = source_hash
