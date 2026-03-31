@@ -420,7 +420,8 @@ class EmbedChain(JSONSerializable):
             except Exception as e:
                 logger.info(f"Failed to add batch due to a bad request: {e}")
                 # Handle the error, e.g., by logging, retrying, or skipping
-                pass
+                raise e
+                # pass
 
         count_new_chunks = self.db.count() - chunks_before_addition
         logger.info(f"Successfully saved {str(src)[:100]} ({chunker.data_type}). New chunks count: {count_new_chunks}")
