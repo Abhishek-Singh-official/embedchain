@@ -124,7 +124,7 @@ class EmbedChain(JSONSerializable):
         loader: Optional[BaseLoader] = None,
         chunker: Optional[BaseChunker] = None,
         **kwargs: Optional[dict[str, Any]],
-    ):
+    ) -> tuple[dict[str, any] | str, bool] :
         """
         Adds the data from the given URL to the vector db.
         Loads the data, chunks it, create embedding for each chunk
@@ -151,6 +151,8 @@ class EmbedChain(JSONSerializable):
         :type kwargs: dict[str, Any]
         :return: source_hash, a md5-hash of the source, in hexadecimal representation.
         :rtype: str
+        :return: is_embeded, this endicate really embeding completed or not.
+        :rtype: bool
         """
         if config is not None:
             pass
@@ -189,7 +191,7 @@ class EmbedChain(JSONSerializable):
         self.user_asks.append([source, data_type.value, metadata])
 
         data_formatter = DataFormatter(data_type, config, loader, chunker)
-        documents, metadatas, _ids, new_chunks = self._load_and_embed(
+        documents, metadatas, _ids, new_chunks, is_embeded = self._load_and_embed(
             data_formatter.loader, data_formatter.chunker, source, metadata, source_hash, config, dry_run, **kwargs
         )
         if data_type in {DataType.DOCS_SITE}:
@@ -218,7 +220,7 @@ class EmbedChain(JSONSerializable):
         if dry_run:
             data_chunks_info = {"chunks": documents, "metadata": metadatas, "count": len(documents), "type": data_type}
             logger.debug(f"Dry run info : {data_chunks_info}")
-            return data_chunks_info
+            return data_chunks_info, True
 
         # Send anonymous telemetry
         if self.config.collect_metrics:
@@ -234,7 +236,9 @@ class EmbedChain(JSONSerializable):
             }
             self.telemetry.capture(event_name="add", properties=event_properties)
 
-        return source_hash
+            logger.info(f"Final Embeding Result: Is_Embeded = {is_embeded}")
+
+        return source_hash, is_embeded
 
     def _get_existing_doc_id(self, chunker: BaseChunker, src: Any):
         """
@@ -340,7 +344,7 @@ class EmbedChain(JSONSerializable):
 
         if existing_doc_id and existing_doc_id == new_doc_id:
             logger.info("Doc content has not changed. Skipping creating chunks and embeddings")
-            return [], [], [], 0
+            return [], [], [], 0, True
 
         # this means that doc content has changed.
         if existing_doc_id and existing_doc_id != new_doc_id:
@@ -372,7 +376,7 @@ class EmbedChain(JSONSerializable):
                     src_copy = src[:50] + "..."
                 logger.info(f"All data from {src_copy} already exists in the database.")
                 # Make sure to return a matching return type
-                return [], [], [], 0
+                return [], [], [], 0, True
 
             ids = list(data_dict.keys())
             documents, metadatas = zip(*data_dict.values())
@@ -397,7 +401,7 @@ class EmbedChain(JSONSerializable):
         metadatas = new_metadatas
 
         if dry_run:
-            return list(documents), metadatas, ids, 0
+            return list(documents), metadatas, ids, 0, True
 
         # Count before, to calculate a delta in the end.
         chunks_before_addition = self.db.count()
@@ -420,13 +424,12 @@ class EmbedChain(JSONSerializable):
             except Exception as e:
                 logger.info(f"Failed to add batch due to a bad request: {e}")
                 # Handle the error, e.g., by logging, retrying, or skipping
-                raise e
                 # pass
 
         count_new_chunks = self.db.count() - chunks_before_addition
         logger.info(f"Successfully saved {str(src)[:100]} ({chunker.data_type}). New chunks count: {count_new_chunks}")
 
-        return list(documents), metadatas, ids, count_new_chunks
+        return list(documents), metadatas, ids, count_new_chunks, count_new_chunks > 0
 
     @staticmethod
     def _format_result(results):
