@@ -248,7 +248,13 @@ class BaseLlm(JSONSerializable):
             if self.config.online:
                 k["web_search_result"] = self.access_search_and_get_results(input_query)
             k["memories"] = memories
-            prompt = self.generate_prompt(input_query, contexts, **k)
+
+            # prompt = self.generate_prompt(input_query, contexts, **k)    # this is original prompt / bellow is modified
+            prompt = f"""
+QUERY: {input_query}.
+
+CONTEXT: {contexts}
+"""
             # logger.info(f"Prompt: {prompt}")
             if dry_run:
                 return prompt
