@@ -139,20 +139,24 @@ class PineconeDB(BaseVectorDB):
         embeddings = self.embedder.embedding_fn(documents)
         for id, text, metadata, embedding in zip(ids, documents, metadatas, embeddings):
             # Insert sparse vectors as well if the user wants to do the hybrid search
+
+            clean_embedding = embedding.tolist() if hasattr(embedding, "tolist") else list(embedding)
+
             sparse_vector_dict = (
                 {"sparse_values": self.bm25_encoder.encode_documents(text)} if self.bm25_encoder else {}
             )
+            
             docs.append(
                 {
                     "id": id,
-                    "values": embedding,
+                    "values": clean_embedding,
                     "metadata": {**metadata, "text": text},
                     **sparse_vector_dict,
                 },
             )
 
         for chunk in chunks(docs, self.batch_size, desc="Adding chunks in batches"):
-            self.pinecone_index.upsert(chunk, namespace=app_id, **kwargs)
+            self.pinecone_index.upsert(vectors=chunk, namespace=app_id, **kwargs)
 
     def query(
         self,
