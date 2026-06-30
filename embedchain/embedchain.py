@@ -475,7 +475,7 @@ class EmbedChain(JSONSerializable):
 
             if self.config.id is not None:
                 where.update({"app_id": self.config.id})
-        logger.info("rrrrrr1",kwargs,**kwargs)
+
         contexts = self.db.query(
             input_query=input_query,
             n_results=query_config.number_documents,
@@ -489,8 +489,7 @@ class EmbedChain(JSONSerializable):
 
     def query(
         self,
-        input_query: str,
-        query_type_intent: Literal["greeting", "query"],
+        input_query: str, ## add later - query_type_intent: Literal["greeting", "query"],
         config: BaseLlmConfig = None,
         dry_run=False,
         where: Optional[dict] = None,
@@ -523,22 +522,24 @@ class EmbedChain(JSONSerializable):
         tuple[str, list[tuple[str,str,str]]] and if token_usage is true then
         tuple[str, list[tuple[str,str,str]], dict[str, Any]]
         """
+        contexts = self._retrieve_from_database(
+            input_query=input_query, config=config, where=where, citations=citations, **kwargs
+        )
+        
         # contexts = self._retrieve_from_database(
         #     input_query=input_query, config=config, where=where, citations=citations, **kwargs
         # ) if query_type_intent == "query" else [""]
 
-        logger.info("rrrrrrrrr2",kwargs,**kwargs)
-
-        if query_type_intent == "query":
-            contexts = self._retrieve_from_database(
-                input_query=input_query,
-                config=config, 
-                where=where, 
-                citations=citations, 
-                **kwargs
-            )
-        else:
-            contexts = []
+        # if query_type_intent == "query":
+        #     contexts = self._retrieve_from_database(
+        #         input_query=input_query,
+        #         config=config, 
+        #         where=where, 
+        #         citations=citations, 
+        #         **kwargs
+        #     )
+        # else:
+        #     contexts = []
 
         if citations and len(contexts) > 0 and isinstance(contexts[0], tuple):
             contexts_data_for_llm_query = list(map(lambda x: x[0], contexts))

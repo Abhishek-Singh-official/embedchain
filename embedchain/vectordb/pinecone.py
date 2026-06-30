@@ -195,13 +195,13 @@ class PineconeDB(BaseVectorDB):
             "filter": query_filter,
             "top_k": n_results,
             "include_metadata": True,
-            # **kwargs,
+            **kwargs,
         }
 
         if self.bm25_encoder:
             sparse_query_vector = self.bm25_encoder.encode_queries(input_query)
             params["sparse_vector"] = sparse_query_vector
-        logger.info("rrrrrrrrrrr3",params,**params)
+
         data = self.pinecone_index.query(**params)
         return [
             (metadata.get("text"), {**metadata, "score": doc.get("score")}) if citations else metadata.get("text")
