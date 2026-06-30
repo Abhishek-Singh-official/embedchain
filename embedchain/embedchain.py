@@ -475,7 +475,7 @@ class EmbedChain(JSONSerializable):
 
             if self.config.id is not None:
                 where.update({"app_id": self.config.id})
-
+        logger.info("rrrrrr1",kwargs,**kwargs)
         contexts = self.db.query(
             input_query=input_query,
             n_results=query_config.number_documents,
@@ -526,8 +526,8 @@ class EmbedChain(JSONSerializable):
         # contexts = self._retrieve_from_database(
         #     input_query=input_query, config=config, where=where, citations=citations, **kwargs
         # ) if query_type_intent == "query" else [""]
-        
-        logger.info("testttttt",**kwargs)
+
+        logger.info("rrrrrrrrr2",kwargs,**kwargs)
 
         if query_type_intent == "query":
             contexts = self._retrieve_from_database(
