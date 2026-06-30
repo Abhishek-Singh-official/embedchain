@@ -490,7 +490,7 @@ class EmbedChain(JSONSerializable):
     def query(
         self,
         input_query: str,
-        query_type: Literal["greeting", "query"],
+        query_type_intent: Literal["greeting", "query"],
         config: BaseLlmConfig = None,
         dry_run=False,
         where: Optional[dict] = None,
@@ -525,7 +525,7 @@ class EmbedChain(JSONSerializable):
         """
         contexts = self._retrieve_from_database(
             input_query=input_query, config=config, where=where, citations=citations, **kwargs
-        ) if query_type == "query" else [""]
+        ) if query_type_intent == "query" else [""]
 
         if citations and len(contexts) > 0 and isinstance(contexts[0], tuple):
             contexts_data_for_llm_query = list(map(lambda x: x[0], contexts))
